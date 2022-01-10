@@ -13,7 +13,8 @@ var app = builder.Build();
 
 var background = Load("./assets/bg.png");
 var foreground = Load("./assets/foreground.png");
-var levels = new Dictionary<string, (Image image, Color color)>(OrdinalIgnoreCase)
+var needle = Load("./assets/needle.png");
+var levels = new Dictionary<string, (Image label, Color color)>(OrdinalIgnoreCase)
 {
     {"low", (Load("./assets/low.png"), LightGreen)},
     {"moderate", (Load("./assets/moderate.png"), Yellow)},
@@ -21,19 +22,37 @@ var levels = new Dictionary<string, (Image image, Color color)>(OrdinalIgnoreCas
     {"extreme", (Load("./assets/extreme.png"), Red)}
 };
 
-app.MapGet("/", async (HttpContext http, string? level) => {
-    level ??= "low";
+app.MapGet("/", async (HttpContext http, int? severity) =>
+{
+    var rotation = Math.Clamp(severity ?? 0, 0, 180);
 
-    if (!levels.TryGetValue(level.Trim(), out var result))
-        return BadRequest("invalid level");
+    var rotatedNeedle = needle.CloneAs<Rgba32>();
+    rotatedNeedle.Mutate(ctx =>
+    {
+        ctx.Transform(new AffineTransformBuilder()
+            .AppendRotationDegrees(rotation)
+        );
+        ctx.Pad(background.Width, background.Height, Transparent);
+    });
+
+    // find the severity based on ranges
+    var result = rotation switch
+    {
+        <= 180 and > 135 => levels["extreme"],
+        <= 135 and > 90 => levels["high"],
+        <= 90 and > 45 => levels["moderate"],
+        _ => levels["low"]
+    };
 
     var image = background.CloneAs<Rgba32>();
-    image.Mutate(ctx => {
+    image.Mutate(ctx =>
+    {
         ctx.Vignette(result.color); // match the background to the intensity
         ctx.DrawImage(foreground, new Point(0, 0), 1f);
-        ctx.DrawImage(result.image, new Point(0, 0), opacity: 1f);
+        ctx.DrawImage(rotatedNeedle, new Point(5, 170), opacity: 1f);
+        ctx.DrawImage(result.label, new Point(0, 20), opacity: 1f);
     });
-    
+
     var memoryStream = new MemoryStream();
     await image.SaveAsync(memoryStream, PngFormat.Instance);
     await memoryStream.FlushAsync();

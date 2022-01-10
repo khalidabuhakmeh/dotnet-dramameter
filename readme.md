@@ -7,7 +7,7 @@ A Minimal API that generates a .NET Drama meter based on a level:
 - **High**
 - **Extreme**
 
-Run the project and pass a `level` url parameter. For example a level of `high` will generate the following image.
+Run the project and pass a `severity` url parameter between `0` and `180` and the endpoint will generate the following image.
 
 ![img.png](img.png)
 
