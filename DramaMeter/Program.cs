@@ -26,7 +26,7 @@ app.MapGet("/", async (HttpContext http, int? severity) =>
 {
     var rotation = Math.Clamp(severity ?? 0, 0, 180);
 
-    var rotatedNeedle = needle.CloneAs<Rgba32>();
+    using var rotatedNeedle = needle.CloneAs<Rgba32>();
     rotatedNeedle.Mutate(ctx =>
     {
         ctx.Transform(new AffineTransformBuilder()
@@ -44,7 +44,7 @@ app.MapGet("/", async (HttpContext http, int? severity) =>
         _ => levels["low"]
     };
 
-    var image = background.CloneAs<Rgba32>();
+    using var image = background.CloneAs<Rgba32>();
     image.Mutate(ctx =>
     {
         ctx.Vignette(result.color); // match the background to the intensity
