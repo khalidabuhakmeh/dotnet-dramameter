@@ -4,7 +4,7 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
-COPY ["DramaMeter/DramaMeter.csproj", "DramaMeter/"]
+COPY ["./DramaMeter/DramaMeter.csproj", "DramaMeter/"]
 RUN dotnet restore "DramaMeter/DramaMeter.csproj"
 COPY . .
 WORKDIR "/src/DramaMeter"
